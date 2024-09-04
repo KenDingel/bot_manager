@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}Scheduler{% endblock %}
+
+{% block content %}
+    <h1>Bot Scheduler</h1>
+    <div class="scheduler-container">
+        <form id="schedule-form" class="schedule-form">
+            <h2>Add New Schedule</h2>
+            <div class="form-group">
+                <label for="bot-select">Select Bot:</label>
+                <select id="bot-select" required>
+                    {% for bot_name in bots %}
+                        <option value="{{ bot_name }}">{{ bot_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="schedule-type">Schedule Type:</label>
+                <select id="schedule-type" required>
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="interval">Interval (hours)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="schedule-value">Value:</label>
+                <input type="text" id="schedule-value" required>
+            </div>
+            <button type="submit">Add Schedule</button>
+        </form>
+
+        <div class="current-schedules">
+            <h2>Current Schedules</h2>
+            <ul id="schedule-list">
+                {% for bot_name, schedule in schedules.items() %}
+                    <li class="schedule-item">
+                        <span class="bot-name">{{ bot_name }}</span>
+                        <span class="schedule-details">{{ schedule }}</span>
+                        <button class="delete-schedule" data-bot="{{ bot_name }}">Delete</button>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.getElementById('schedule-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const botName = document.getElementById('bot-select').value;
+        const scheduleType = document.getElementById('schedule-type').value;
+        const scheduleValue = document.getElementById('schedule-value').value;
+
+        fetch('/api/add_schedule', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                bot_name: botName,
+                schedule_type: scheduleType,
+                value: scheduleValue
+            }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                sounds.success.play();
+                alert('Schedule added successfully');
+                location.reload();
+            } else {
+                sounds.error.play();
+                alert('Failed to add schedule');
+            }
+        });
+    });
+
+    // Add event listeners for delete buttons
+    document.querySelectorAll('.delete-schedule').forEach(button => {
+        button.addEventListener('click', function() {
+            const botName = this.dataset.bot;
+            if (confirm(`Are you sure you want to delete the schedule for ${botName}?`)) {
+                deleteSchedule(botName);
+            }
+        });
+    });
+
+    function deleteSchedule(botName) {
+        fetch(`/api/delete_schedule/${botName}`, {
+            method: 'DELETE',
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                sounds.success.play();
+                alert('Schedule deleted successfully');
+                location.reload();
+            } else {
+                sounds.error.play();
+                alert('Failed to delete schedule');
+            }
+        });
+    }
+</script>
+{% endblock %}

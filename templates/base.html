@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Bot Management System{% endblock %}</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/howler@2.2.3/dist/howler.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+</head>
+<body>
+    <nav>
+        <ul>
+            <li><a href="{{ url_for('main.index') }}">Dashboard</a></li>
+            <li><a href="{{ url_for('main.scheduler') }}">Scheduler</a></li>
+            <li><a href="{{ url_for('main.logout') }}">Logout</a></li>
+        </ul>
+    </nav>
+    <div class="container">
+        {% block content %}{% endblock %}
+    </div>
+    {% block scripts %}{% endblock %}
+    <script>
+        // Sound effects
+        let sounds;
+
+        // Function to initialize sound effects
+        function initializeSounds() {
+            sounds = {
+                click: new Howl({
+                    src: ['{{ url_for("static", filename="sounds/click.wav") }}']
+                }),
+                success: new Howl({
+                    src: ['{{ url_for("static", filename="sounds/success.wav") }}']
+                }),
+                error: new Howl({
+                    src: ['{{ url_for("static", filename="sounds/error.wav") }}']
+                })
+            };
+
+            // Add click sound to all buttons
+            document.querySelectorAll('button').forEach(button => {
+                button.addEventListener('click', () => sounds.click.play());
+            });
+        }
+
+        // Function to handle user interaction and initialize audio
+        function handleUserInteraction() {
+            if (!sounds) {
+                initializeSounds();
+            }
+            document.removeEventListener('click', handleUserInteraction);
+        }
+
+        // Add event listener for user interaction
+        document.addEventListener('click', handleUserInteraction);
+
+        // Optional: Add a visual cue to inform users that audio is available after interaction
+        document.addEventListener('DOMContentLoaded', () => {
+            const audioMessage = document.createElement('div');
+            audioMessage.textContent = 'Click anywhere to enable audio';
+            audioMessage.style.position = 'fixed';
+            audioMessage.style.top = '10px';
+            audioMessage.style.right = '10px';
+            audioMessage.style.padding = '10px';
+            audioMessage.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+            audioMessage.style.color = 'white';
+            audioMessage.style.borderRadius = '5px';
+            audioMessage.style.zIndex = '1000';
+            document.body.appendChild(audioMessage);
+
+            document.addEventListener('click', () => {
+                audioMessage.style.display = 'none';
+            }, { once: true });
+        });
+    </script>
+</body>
+</html>
